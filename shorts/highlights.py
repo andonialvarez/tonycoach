@@ -42,6 +42,8 @@ Start exactly where that hook begins, not on filler.
 Rules:
 - Use only segment boundaries from the transcript for start and end (in seconds).
 - Clips must not overlap.
+- Skip the video's intro (roughly the first 20 seconds), outro, sponsor reads and calls to subscribe: they usually show titles or b-roll instead of the speaker.
+- Avoid moments that depend on something shown on screen ("as you can see here", lists on screen).
 - Write all titles, captions, hooks and hashtags in {language}.
 - hook: max 7 words, punchy, shown on screen.
 - Titles: max 70 characters. Captions: 1-3 short sentences that add your own angle or takeaway. \
