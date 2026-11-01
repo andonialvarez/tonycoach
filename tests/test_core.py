@@ -90,14 +90,27 @@ def test_creator_permission():
 
 
 def test_metricool_csv(tmp_path):
+    from shorts.metricool import HEADER
+
     clip = {"file": "/x/a-01.mp4", "credit_text": "Créditos",
-            "copy": {"youtube": {"title": "T", "caption": "C", "hashtags": ["coach"]}}}
+            "copy": {p: {"title": "T", "caption": 'Di "sí"', "hashtags": ["coach"]}
+                     for p in ("tiktok", "instagram", "youtube")}}
     cfg = {"metricool": {"media_base_url": "https://cdn.example/clips/"}}
-    path = export_csv([{"clip_id": "a", "platform": "youtube", "when": "2026-11-02T18:30:00+01:00"}],
-                      {"a": clip}, cfg, tmp_path / "o.csv")
-    text = path.read_text(encoding="utf-8-sig")
-    assert "2026-11-02,18:30,YouTube,https://cdn.example/clips/a-01.mp4,T" in text
-    assert "#shorts" in text
+    posts = [{"clip_id": "a", "platform": "instagram", "when": "2026-11-02T13:00:00+01:00"},
+             {"clip_id": "a", "platform": "youtube", "when": "2026-11-02T18:30:00+01:00"}]
+    path = export_csv(posts, {"a": clip}, cfg, tmp_path / "o.csv")
+    raw = path.read_bytes()
+    assert raw.startswith(b"\xef\xbb\xbf")
+    import csv, io
+    rows = list(csv.reader(io.StringIO(raw.decode("utf-8-sig")), delimiter=";"))
+    assert rows[0] == HEADER and all(len(r) == len(HEADER) for r in rows)
+    ig = dict(zip(HEADER, rows[1]))
+    assert ig["Date"] == "2026-11-02" and ig["Time"] == "13:00:00" and ig["Draft"] == "false"
+    assert ig["Instagram"] == "true" and ig["TikTok"] == "false" and ig["Instagram Post Type"] == "REEL"
+    assert ig["Picture Url 1"] == "https://cdn.example/clips/a-01.mp4" and 'Di "sí"' in ig["Text"]
+    yt = dict(zip(HEADER, rows[2]))
+    assert yt["Youtube"] == "true" and yt["Youtube Video Type"] == "SHORT" and "#shorts" in yt["Text"]
+    assert ';"2026-11-02";"13:00:00";false;' in raw.decode("utf-8-sig")
 
 
 def test_creative_commons_video_is_allowed_without_allowlist():

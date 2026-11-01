@@ -75,11 +75,11 @@ exportar). Puedes lanzarlo cada día con el Programador de tareas de Windows o c
 ## Metricool
 
 1. En Metricool conecta TikTok, Instagram y YouTube (inicio de sesión oficial de cada red).
-2. En el Planificador, abre la carga masiva por CSV y descarga su plantilla.
-3. Ajusta los nombres de columna en `config.yaml → metricool.columns` para que coincidan con la plantilla.
-4. Sube los clips a una carpeta pública (Google Drive/Dropbox con enlace, un bucket…) y pon su URL en
+2. El CSV que genera `export` sigue la plantilla de Planificación → ⋮ → Importar CSV
+   (una fila por clip y red, separador `;`). Incluido en el plan gratuito.
+3. Sube los clips a una carpeta pública (Google Drive/Dropbox con enlace, un bucket…) y pon su URL en
    `metricool.media_base_url`. Si la dejas vacía, el CSV lleva la ruta local y adjuntas cada vídeo a mano.
-5. Importa el CSV generado por `python -m shorts export`.
+4. Importa el CSV generado por `python -m shorts export`.
 
 La API de Metricool (plan Advanced) permitiría saltarse el CSV; está pendiente (`metricool.mode: api`).
 

@@ -54,15 +54,8 @@ metricool:
   # Redes que van en el CSV. Las demás se listan para programarlas a mano
   # (p. ej. YouTube Studio programa Shorts gratis y así ahorras publicaciones del plan gratuito).
   platforms: [tiktok, instagram]
-  # URL pública donde estarán los clips (carpeta compartida, bucket...). Si está vacía,
-  # el CSV lleva la ruta local y adjuntas el vídeo a mano en el planificador.
+  # URL pública donde estarán los clips (carpeta compartida, bucket...). Metricool necesita una URL
+  # pública para el vídeo; si está vacía, adjuntas cada vídeo a mano en el Planificador tras importar.
   media_base_url: ""
-  # Nombres de columna del CSV. Descarga la plantilla de carga masiva de Metricool
-  # y ajusta estos nombres para que coincidan exactamente.
-  columns:
-    text: Text
-    date: Date
-    time: Time
-    network: Network
-    media: Video
-    title: Title
+  draft: false               # true = se importan como borrador y confirmas cada uno en Metricool
+  brand_name: ""             # nombre exacto de la marca en Metricool (opcional)
