@@ -32,6 +32,9 @@ style:
   margin_bottom: 520         # altura de los subtítulos desde abajo (px sobre 1920)
   hook_seconds: 3            # segundos que se ve el gancho arriba al empezar
 
+# Redes en las que se programa cada clip.
+platforms: [tiktok, instagram, youtube]
+
 # Franjas de publicación (hora local de "timezone"). Días: mon tue wed thu fri sat sun,
 # rangos "mon-fri" o listas "mon,wed,fri". Una publicación como máximo por franja.
 schedule:
@@ -48,6 +51,9 @@ schedule:
 
 metricool:
   mode: csv                  # csv (carga masiva) | api (requiere plan Advanced, pendiente)
+  # Redes que van en el CSV. Las demás se listan para programarlas a mano
+  # (p. ej. YouTube Studio programa Shorts gratis y así ahorras publicaciones del plan gratuito).
+  platforms: [tiktok, instagram]
   # URL pública donde estarán los clips (carpeta compartida, bucket...). Si está vacía,
   # el CSV lleva la ruta local y adjuntas el vídeo a mano en el planificador.
   media_base_url: ""

@@ -163,7 +163,9 @@ def cmd_schedule(cfg, state, args) -> None:
     taken: dict[str, set[str]] = {}
     for p in state.posts:
         taken.setdefault(p["platform"], set()).add(p["when"])
-    new = assign_slots(ready, cfg.get("schedule", {}), cfg.get("timezone", "Europe/Madrid"), taken)
+    platforms = tuple(cfg.get("platforms") or PLATFORMS)
+    new = assign_slots(ready, cfg.get("schedule", {}), cfg.get("timezone", "Europe/Madrid"), taken,
+                       platforms=platforms)
     for p in new:
         p["exported"] = False
         state.clips[p["clip_id"]]["status"] = "scheduled"
@@ -177,9 +179,17 @@ def cmd_export(cfg, state, args) -> None:
 
     if cfg.get("metricool", {}).get("mode", "csv") != "csv":
         raise SystemExit("El modo api de Metricool aún no está implementado; usa mode: csv.")
-    todo = [p for p in state.posts if not p.get("exported")]
+    via = set(cfg.get("metricool", {}).get("platforms") or PLATFORMS)
+    todo = [p for p in state.posts if not p.get("exported") and p["platform"] in via]
+    manual = [p for p in state.posts if not p.get("exported") and p["platform"] not in via]
+    for p in manual:
+        c = state.clips[p["clip_id"]]
+        print(f"Manual ({p['platform']}) {p['when'][:16].replace('T', ' ')}: {c['file']}\n"
+              f"  título: {c['copy'][p['platform']]['title']}")
+        p["exported"] = True
     if not todo:
-        print("Nada nuevo que exportar.")
+        state.save()
+        print("Nada nuevo que exportar a Metricool.")
         return
     name = f"metricool-{datetime.now():%Y%m%d-%H%M}.csv"
     path = export_csv(todo, state.clips, cfg, Path(cfg["output_dir"]) / "exports" / name)
