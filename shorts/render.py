@@ -57,8 +57,14 @@ def escape_filter_path(path: Path) -> str:
     return p.replace(":", "\\:").replace("'", "\\'")
 
 
+def video_maxrate_kbps(duration: float, max_mb: float, audio_kbps: int = 128) -> int:
+    """Bitrate de vídeo para que el clip no pase de max_mb (la extensión de Chrome sube hasta 10 MB)."""
+    total_kbps = max_mb * 8 * 1000 / max(duration, 1.0) * 0.95  # 5 % de margen para el contenedor
+    return max(600, int(total_kbps - audio_kbps))
+
+
 def build_ffmpeg_cmd(src: Path, out: Path, ass: Path, start: float, end: float, src_w: int, src_h: int,
-                     center: float | None) -> list[str]:
+                     center: float | None, max_mb: float | None = 9.5) -> list[str]:
     if src_w / src_h <= 9 / 16 + 0.01:  # ya vertical
         geo = f"scale={OUT_W}:{OUT_H}:force_original_aspect_ratio=decrease,pad={OUT_W}:{OUT_H}:(ow-iw)/2:(oh-ih)/2"
     else:
@@ -71,16 +77,19 @@ def build_ffmpeg_cmd(src: Path, out: Path, ass: Path, start: float, end: float, 
         "-vf", vf,
         "-af", "loudnorm=I=-14:TP=-1.5:LRA=11",
         "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "160k", "-ar", "48000",
+        *(["-maxrate", f"{(m := video_maxrate_kbps(end - start, max_mb))}k", "-bufsize", f"{m * 2}k"]
+          if max_mb else []),
+        "-c:a", "aac", "-b:a", "128k", "-ar", "48000",
         "-movflags", "+faststart", str(out),
     ]
 
 
-def render_clip(src: Path, out: Path, ass_text: str, start: float, end: float) -> Path:
+def render_clip(src: Path, out: Path, ass_text: str, start: float, end: float,
+                max_mb: float | None = 9.5) -> Path:
     out.parent.mkdir(parents=True, exist_ok=True)
     ass = out.with_suffix(".ass")
     ass.write_text(ass_text, encoding="utf-8")
     w, h = probe_size(src)
     center = face_center_x(src, start, end)
-    subprocess.run(build_ffmpeg_cmd(src, out, ass, start, end, w, h, center), check=True)
+    subprocess.run(build_ffmpeg_cmd(src, out, ass, start, end, w, h, center, max_mb), check=True)
     return out

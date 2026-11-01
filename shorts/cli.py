@@ -44,7 +44,7 @@ def process_source(cfg: dict[str, Any], state: State, *, video: Path, video_id: 
         words = words_in_range(transcript, h.start, h.end)
         ass = build_ass(words, duration=h.end - h.start, style=cfg.get("style", {}), hook=h.hook,
                         credit=creator.handle)
-        render_clip(video, dest, ass, h.start, h.end)
+        render_clip(video, dest, ass, h.start, h.end, max_mb=c.get("max_mb", 9.5))
         state.clips[clip_id] = {
             "video_id": video_id, "file": str(dest), "start": h.start, "end": h.end, "hook": h.hook,
             "reason": h.reason, "score": h.score, "status": status, "creator": creator.name,

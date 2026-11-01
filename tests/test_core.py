@@ -74,6 +74,12 @@ def test_crop_follows_face_and_clamps():
     assert crop_x(1920, 1080, 1.0) == (606, 1314)
 
 
+def test_maxrate_keeps_clip_under_limit():
+    from shorts.render import video_maxrate_kbps
+    k = video_maxrate_kbps(59, 9.5)
+    assert (k + 128) * 59 / 8 / 1000 <= 9.5
+
+
 def test_ffmpeg_cmd_vertical_source_is_padded():
     cmd = build_ffmpeg_cmd(Path("in.mp4"), Path("o.mp4"), Path("o.ass"), 1, 31, 1080, 1920, None)
     assert "pad=1080:1920" in cmd[cmd.index("-vf") + 1]

@@ -21,6 +21,7 @@ clips:
   per_video: 4
   min_seconds: 20
   max_seconds: 59
+  max_mb: 9.5                # tamaño máximo por clip (la extensión de Claude en Chrome sube hasta 10 MB)
   auto_approve: false        # true = publica sin revisión manual (no recomendado al principio)
 
 style:
