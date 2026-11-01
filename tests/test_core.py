@@ -98,3 +98,14 @@ def test_metricool_csv(tmp_path):
     text = path.read_text(encoding="utf-8-sig")
     assert "2026-11-02,18:30,YouTube,https://cdn.example/clips/a-01.mp4,T" in text
     assert "#shorts" in text
+
+
+def test_creative_commons_video_is_allowed_without_allowlist():
+    from shorts.creators import resolve_permission
+
+    info = {"license": "Creative Commons Attribution license (reuse allowed)", "channel": "Coach CC",
+            "uploader_id": "@coachcc", "channel_url": "https://www.youtube.com/channel/UC1"}
+    c = resolve_permission([], info, "x")
+    assert c.permission and c.handle == "@coachcc" and "Creative Commons" in c.permission_note
+    with pytest.raises(PermissionError):
+        resolve_permission([], {"license": "Standard YouTube License", "channel": "X"}, "x")

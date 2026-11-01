@@ -48,3 +48,28 @@ def require_permission(creator: Creator | None, source: str) -> Creator:
     if not creator.permission:
         raise PermissionError(f"{source}: {creator.name} no tiene permission: true en creators.yaml.")
     return creator
+
+
+def is_reuse_licensed(info: dict) -> bool:
+    """True si YouTube marca el vídeo con licencia Creative Commons (CC BY: reutilización permitida)."""
+    return "creative commons" in (info.get("license") or "").lower()
+
+
+def resolve_permission(creators: list[Creator], info: dict, source: str) -> Creator:
+    """Permite el vídeo si el canal está autorizado o si el propio vídeo tiene licencia Creative Commons."""
+    c = match_creator(creators, channel_url=info.get("channel_url", ""),
+                      uploader_id=info.get("uploader_id", ""), name=info.get("channel", ""))
+    if c and c.permission:
+        return c
+    if is_reuse_licensed(info):
+        handle = info.get("uploader_id") or ""
+        if handle and not handle.startswith("@"):
+            handle = f"@{handle}"
+        return Creator(
+            name=c.name if c else (info.get("channel") or info.get("uploader") or "Autor original"),
+            handle=c.handle if c else (handle or info.get("channel") or ""),
+            youtube_channel=info.get("channel_url", ""),
+            permission=True,
+            permission_note=f"Licencia del vídeo: {info.get('license')}",
+        )
+    return require_permission(c, source)

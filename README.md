@@ -16,6 +16,14 @@ por escrito a cada creador y guárdalo. Cada clip lleva el @ del creador en pant
 vídeo original en la descripción. Subir contenido ajeno sin permiso provoca reclamaciones de
 Content ID, strikes y cierres de cuenta.
 
+### Vídeos que se pueden reutilizar sin pedir permiso
+
+- **Creative Commons**: algunos autores publican en YouTube con licencia *Creative Commons Atribución*,
+  que permite reutilizar el vídeo dando crédito. `python -m shorts discover "búsqueda"` los encuentra y
+  comprueba la licencia de cada vídeo; esos vídeos se procesan aunque el canal no esté en `creators.yaml`.
+- **Campañas de clipping** (Whop Content Rewards, Vyro…): el creador da el permiso, los vídeos y además
+  paga por visualizaciones. Cumple las reglas de cada campaña (etiquetas, enlaces, formato).
+
 ## Requisitos
 
 - Python 3.10 o superior
@@ -49,6 +57,7 @@ Define la clave como variable de entorno (no la guardes en el repo):
 python -m shorts process "https://www.youtube.com/watch?v=XXXX"   # un vídeo concreto
 python -m shorts process-file video.mp4 --creator "Nombre del coach" --url "https://youtu.be/XXXX"
 python -m shorts watch          # busca vídeos nuevos en todos los canales autorizados
+python -m shorts discover "motivación disciplina"   # lista vídeos Creative Commons (añade --process)
 
 python -m shorts review         # lista los clips pendientes (están en output/clips/)
 python -m shorts approve VIDEOID-01 VIDEOID-03     # o: approve all

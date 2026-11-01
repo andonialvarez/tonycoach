@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import load_config
-from .creators import Creator, load_creators, match_creator, require_permission
+from .creators import Creator, load_creators, match_creator, require_permission, resolve_permission
 from .schedule import PLATFORMS, assign_slots
 from .state import State
 
@@ -64,9 +64,7 @@ def cmd_process(cfg, state, args) -> None:
     creators = load_creators(args.creators)
     for url in args.urls:
         info = video_info(url)
-        creator = require_permission(
-            match_creator(creators, channel_url=info.get("channel_url", ""),
-                          uploader_id=info.get("uploader_id", ""), name=info.get("channel", "")), url)
+        creator = resolve_permission(creators, info, url)
         if info["id"] in state.videos and not args.force:
             print(f"Ya procesado: {info['title']} (usa --force para repetir)")
             continue
@@ -103,6 +101,33 @@ def cmd_watch(cfg, state, args) -> None:
             video = download_video(url, cfg["work_dir"])
             process_source(cfg, state, video=video, video_id=info["id"], title=info["title"], url=url,
                            creator=creator)
+
+
+def cmd_discover(cfg, state, args) -> None:
+    from .creators import is_reuse_licensed
+    from .download import download_video, search_creative_commons, video_info
+
+    d = cfg.get("download", {})
+    lo, hi = float(d.get("min_minutes", 8)) * 60, float(d.get("max_minutes", 40)) * 60
+    found = 0
+    for entry in search_creative_commons(args.query, args.limit):
+        dur = entry.get("duration") or 0
+        if entry["id"] in state.videos or (dur and not (lo <= dur <= hi)):
+            continue
+        url = f"https://www.youtube.com/watch?v={entry['id']}"
+        info = video_info(url)
+        if not is_reuse_licensed(info):  # se comprueba la licencia vídeo a vídeo, no solo el filtro
+            continue
+        found += 1
+        print(f"\n{info['title']}\n  canal: {info.get('channel')}  ·  {int(info.get('duration', 0)) // 60} min"
+              f"  ·  {info.get('view_count', 0):,} vistas\n  {url}\n  licencia: {info.get('license')}")
+        if args.process:
+            creator = resolve_permission([], info, url)
+            video = download_video(url, cfg["work_dir"])
+            process_source(cfg, state, video=video, video_id=info["id"], title=info["title"], url=url,
+                           creator=creator)
+    if not found:
+        print("No he encontrado vídeos Creative Commons de esa duración. Prueba otra búsqueda.")
 
 
 def cmd_review(cfg, state, args) -> None:
@@ -189,6 +214,12 @@ def main(argv: list[str] | None = None) -> None:
     p.set_defaults(fn=cmd_process_file)
 
     sub.add_parser("watch", help="procesar vídeos nuevos de los canales autorizados").set_defaults(fn=cmd_watch)
+    p = sub.add_parser("discover", help="buscar vídeos con licencia Creative Commons (reutilización permitida)")
+    p.add_argument("query", help='p. ej. "motivación disciplina conferencia"')
+    p.add_argument("--limit", type=int, default=30, help="resultados de búsqueda a revisar")
+    p.add_argument("--process", action="store_true", help="procesar directamente los que encuentre")
+    p.set_defaults(fn=cmd_discover)
+
     sub.add_parser("review", help="ver clips pendientes").set_defaults(fn=cmd_review)
     for name, status in (("approve", "approved"), ("reject", "rejected")):
         p = sub.add_parser(name, help=f"marcar clips como {status} (ids o 'all')")

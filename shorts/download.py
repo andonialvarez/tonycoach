@@ -37,3 +37,19 @@ def latest_videos(channel_url: str, limit: int) -> list[dict[str, Any]]:
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=False)
     return [e for e in (info.get("entries") or []) if e.get("id")]
+
+
+CC_FILTER = "EgIwAQ%3D%3D"  # filtro "Creative Commons" de la búsqueda de YouTube
+
+
+def search_creative_commons(query: str, limit: int) -> list[dict[str, Any]]:
+    """Busca en YouTube vídeos marcados como Creative Commons (sin descargar)."""
+    import urllib.parse
+
+    import yt_dlp
+
+    url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(query)}&sp={CC_FILTER}"
+    opts = {"quiet": True, "extract_flat": True, "playlistend": limit}
+    with yt_dlp.YoutubeDL(opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+    return [e for e in (info.get("entries") or []) if e.get("id")]
