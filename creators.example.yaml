@@ -1,0 +1,8 @@
+# Lista de creadores AUTORIZADOS. El sistema solo procesa vídeos de canales con permission: true.
+# Copia este archivo como creators.yaml.
+creators:
+  - name: "Nombre del coach"
+    handle: "@su_usuario"                       # se muestra en el clip y en la descripción
+    youtube_channel: "https://www.youtube.com/@su_canal"
+    permission: false                           # pon true solo con permiso por escrito
+    permission_note: "Email del 2026-11-01, guardado en /permisos"
