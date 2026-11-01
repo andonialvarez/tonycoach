@@ -22,6 +22,8 @@ def face_center_x(video: Path, start: float, end: float, step: float = 1.0) -> f
         import cv2
     except ImportError:
         return None
+    if not hasattr(cv2, "CascadeClassifier"):
+        return None
     cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
     cap = cv2.VideoCapture(str(video))
     xs: list[float] = []

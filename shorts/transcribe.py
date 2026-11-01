@@ -12,12 +12,25 @@ def transcribe(video: Path, work_dir: str | Path, model: str = "small", device: 
     if cache.exists():
         return json.loads(cache.read_text(encoding="utf-8"))
 
+    try:
+        data = _run(video, model, device, language)
+    except RuntimeError as e:  # p. ej. CUDA detectada pero sin cuBLAS/cuDNN instalados
+        if device == "cpu":
+            raise
+        print(f"Whisper no pudo usar la GPU ({str(e).splitlines()[0][:80]}); sigo en CPU.")
+        data = _run(video, model, "cpu", language)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    return data
+
+
+def _run(video: Path, model: str, device: str, language: str | None) -> dict[str, Any]:
     from faster_whisper import WhisperModel
 
     compute = "int8" if device in ("cpu", "auto") else "float16"
     wm = WhisperModel(model, device=device, compute_type=compute)
     segments, info = wm.transcribe(str(video), language=language, word_timestamps=True, vad_filter=True)
-    data = {
+    return {
         "language": info.language,
         "duration": info.duration,
         "segments": [
@@ -31,6 +44,3 @@ def transcribe(video: Path, work_dir: str | Path, model: str = "small", device: 
             for s in segments
         ],
     }
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    cache.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
-    return data
