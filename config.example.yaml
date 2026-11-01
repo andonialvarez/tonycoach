@@ -1,0 +1,62 @@
+# Copia este archivo como config.yaml y ajústalo.
+timezone: Europe/Madrid      # zona horaria de tu audiencia
+language: es                 # idioma de transcripción y de los textos
+work_dir: ./work             # descargas y transcripciones (temporal)
+output_dir: ./output         # clips terminados, estado y CSV
+
+whisper:
+  model: small               # tiny | base | small | medium | large-v3 (más grande = mejor y más lento)
+  device: auto               # auto | cpu | cuda
+
+llm:
+  model: claude-opus-5-5
+  effort: medium             # low | medium | high
+
+download:
+  min_minutes: 8             # ignora vídeos más cortos al vigilar canales
+  max_minutes: 40
+  latest_per_channel: 3      # cuántos vídeos recientes mira por canal en "watch"
+
+clips:
+  per_video: 4
+  min_seconds: 20
+  max_seconds: 59
+  max_mb: 9.5                # tamaño máximo por clip (la extensión de Claude en Chrome sube hasta 10 MB)
+  auto_approve: false        # true = publica sin revisión manual (no recomendado al principio)
+
+style:
+  font: Montserrat ExtraBold # tiene que estar instalada en el sistema
+  font_size: 80
+  words_per_line: 3
+  uppercase: true
+  highlight_color: "00FFFF"  # color de la palabra activa, en BGR (00FFFF = amarillo)
+  margin_bottom: 520         # altura de los subtítulos desde abajo (px sobre 1920)
+  hook_seconds: 3            # segundos que se ve el gancho arriba al empezar
+
+# Redes en las que se programa cada clip.
+platforms: [tiktok, instagram, youtube]
+
+# Franjas de publicación (hora local de "timezone"). Días: mon tue wed thu fri sat sun,
+# rangos "mon-fri" o listas "mon,wed,fri". Una publicación como máximo por franja.
+schedule:
+  lead_minutes: 30           # no programar nada antes de ahora + este margen
+  tiktok:
+    mon-fri: ["13:30", "20:30"]
+    sat-sun: ["11:00", "20:00"]
+  instagram:
+    mon-fri: ["13:00", "20:00"]
+    sat-sun: ["11:30"]
+  youtube:
+    mon-fri: ["18:30"]
+    sat-sun: ["12:30"]
+
+metricool:
+  mode: csv                  # csv (carga masiva) | api (requiere plan Advanced, pendiente)
+  # Redes que van en el CSV. Las demás se listan para programarlas a mano
+  # (p. ej. YouTube Studio programa Shorts gratis y así ahorras publicaciones del plan gratuito).
+  platforms: [tiktok, instagram]
+  # URL pública donde estarán los clips (carpeta compartida, bucket...). Metricool necesita una URL
+  # pública para el vídeo; si está vacía, adjuntas cada vídeo a mano en el Planificador tras importar.
+  media_base_url: ""
+  draft: false               # true = se importan como borrador y confirmas cada uno en Metricool
+  brand_name: ""             # nombre exacto de la marca en Metricool (opcional)
