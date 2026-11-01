@@ -104,8 +104,9 @@ def cmd_watch(cfg, state, args) -> None:
 
 
 def cmd_discover(cfg, state, args) -> None:
+    """Solo lista candidatos: tú decides cuáles procesar, porque hay resubidas con licencia CC falsa."""
     from .creators import is_reuse_licensed
-    from .download import download_video, search_creative_commons, video_info
+    from .download import search_creative_commons, video_info
 
     d = cfg.get("download", {})
     lo, hi = float(d.get("min_minutes", 8)) * 60, float(d.get("max_minutes", 40)) * 60
@@ -115,18 +116,20 @@ def cmd_discover(cfg, state, args) -> None:
         if entry["id"] in state.videos or (dur and not (lo <= dur <= hi)):
             continue
         url = f"https://www.youtube.com/watch?v={entry['id']}"
-        info = video_info(url)
+        try:
+            info = video_info(url)
+        except Exception as e:  # vídeo privado, borrado o no disponible en tu país
+            print(f"(saltado {url}: {str(e).splitlines()[0][:80]})")
+            continue
         if not is_reuse_licensed(info):  # se comprueba la licencia vídeo a vídeo, no solo el filtro
             continue
         found += 1
-        print(f"\n{info['title']}\n  canal: {info.get('channel')}  ·  {int(info.get('duration', 0)) // 60} min"
-              f"  ·  {info.get('view_count', 0):,} vistas\n  {url}\n  licencia: {info.get('license')}")
-        if args.process:
-            creator = resolve_permission([], info, url)
-            video = download_video(url, cfg["work_dir"])
-            process_source(cfg, state, video=video, video_id=info["id"], title=info["title"], url=url,
-                           creator=creator)
-    if not found:
+        print(f"\n{info['title']}\n  canal: {info.get('channel')} ({info.get('channel_follower_count') or '?'} subs)"
+              f"  ·  {int(info.get('duration', 0)) // 60} min  ·  {info.get('view_count', 0):,} vistas"
+              f"\n  {url}\n  licencia: {info.get('license')}")
+    if found:
+        print("\nComprueba que el canal es el autor original (no una resubida) antes de usar: python -m shorts process URL")
+    else:
         print("No he encontrado vídeos Creative Commons de esa duración. Prueba otra búsqueda.")
 
 
@@ -217,7 +220,6 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("discover", help="buscar vídeos con licencia Creative Commons (reutilización permitida)")
     p.add_argument("query", help='p. ej. "motivación disciplina conferencia"')
     p.add_argument("--limit", type=int, default=30, help="resultados de búsqueda a revisar")
-    p.add_argument("--process", action="store_true", help="procesar directamente los que encuentre")
     p.set_defaults(fn=cmd_discover)
 
     sub.add_parser("review", help="ver clips pendientes").set_defaults(fn=cmd_review)
